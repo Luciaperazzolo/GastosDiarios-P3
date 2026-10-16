@@ -1,7 +1,19 @@
+import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Pressable } from 'react-native';
+import FormularioNuevoGasto from './src/screens/FormularioNuevoGasto';
 
 export default function App() {
+  // Controla qué pantalla se muestraS
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+
+  // Si el usuario quiere cargar un gasto, mostramos el formulario
+  if (mostrarFormulario) {
+    return (
+      <FormularioNuevoGasto onVolver={() => setMostrarFormulario(false)}/>
+    );
+  }
+
   return (
     <View style={styles.container}> 
       <StatusBar style="dark" /> 
@@ -9,6 +21,10 @@ export default function App() {
         <Text style={styles.title}>ExpenseTracker</Text>
         <Text style={styles.welcome}>¡Bienvenido/a!</Text>
         <Text style={styles.description}>Una forma sencilla de registrar y organizar tus gastos diarios.</Text>
+
+        <Pressable style={styles.boton} onPress={() => setMostrarFormulario(true)}>
+          <Text style={styles.textoBoton}>Nuevo gasto</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -59,6 +75,23 @@ const styles = StyleSheet.create({
     color: '#4B5563',
     lineHeight: 24,
     textAlign: 'center',
+  },
+
+  //Estilos del botón (fondo azul, bordes redondeados y centrado del texto)
+  boton: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '100%',
+  },
+
+  //Estilos del texto del botón (blanco, tamaño mediano y en negrita)
+  textoBoton: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 
 });
