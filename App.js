@@ -2,15 +2,23 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import FormularioNuevoGasto from './src/screens/FormularioNuevoGasto';
+import PantallaGastos from './src/screens/PantallaGastos';
 
 export default function App() {
-  // Controla qué pantalla se muestraS
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  // Controla cuál de las pantallas se muestra.
+  const [pantallaActual, setPantallaActual] = useState('inicio');
 
-  // Si el usuario quiere cargar un gasto, mostramos el formulario
-  if (mostrarFormulario) {
+  // Formulario para cargar un nuevo gasto (funcionalidad existente).
+  if (pantallaActual === 'formulario') {
     return (
-      <FormularioNuevoGasto onVolver={() => setMostrarFormulario(false)}/>
+      <FormularioNuevoGasto onVolver={() => setPantallaActual('inicio')}/>
+    );
+  }
+
+  // User Story #5: listado de gastos de ejemplo.
+  if (pantallaActual === 'gastos') {
+    return (
+      <PantallaGastos onVolver={() => setPantallaActual('inicio')}/>
     );
   }
 
@@ -22,8 +30,12 @@ export default function App() {
         <Text style={styles.welcome}>¡Bienvenido/a!</Text>
         <Text style={styles.description}>Una forma sencilla de registrar y organizar tus gastos diarios.</Text>
 
-        <Pressable style={styles.boton} onPress={() => setMostrarFormulario(true)}>
+        <Pressable style={styles.boton} onPress={() => setPantallaActual('formulario')}>
           <Text style={styles.textoBoton}>Nuevo gasto</Text>
+        </Pressable>
+
+        <Pressable style={styles.botonSecundario} onPress={() => setPantallaActual('gastos')}>
+          <Text style={styles.textoBotonSecundario}>Ver gastos</Text>
         </Pressable>
       </View>
     </View>
@@ -90,6 +102,25 @@ const styles = StyleSheet.create({
   //Estilos del texto del botón (blanco, tamaño mediano y en negrita)
   textoBoton: {
     color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  // Botón para acceder al listado sin modificar la navegación existente.
+  botonSecundario: {
+    borderWidth: 1,
+    borderColor: '#2563EB',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 12,
+  },
+
+  textoBotonSecundario: {
+    color: '#2563EB',
     fontSize: 16,
     fontWeight: 'bold',
   },
