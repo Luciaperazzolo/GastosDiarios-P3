@@ -1,22 +1,22 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Encabezado from '../components/Encabezado';
 
-// User Story #5: registros de ejemplo definidos manualmente.
-// Más adelante esta lista se podrá reemplazar por gastos guardados.
+// User Story #5: gastos de ejemplo que se mantienen en la demostración.
 const gastosDeEjemplo = [
   { id: '1', descripcion: 'Supermercado', monto: 25000 },
   { id: '2', descripcion: 'Combustible', monto: 18000 },
   { id: '3', descripcion: 'Internet', monto: 32000 },
 ];
 
-export default function PantallaGastos({ onVolver }) {
+// User Story #6: esta pantalla se muestra a través del TabNavigator.
+export default function PantallaGastos({ navigation }) {
   return (
-    <View style={styles.contenedor}>
-      <StatusBar style="dark" />
-      <Text style={styles.titulo}>Listado de gastos</Text>
-      <Text style={styles.descripcion}>
-        Así se verán los gastos cuando los registremos.
-      </Text>
+    <SafeAreaView edges={['top']} style={styles.contenedor}>
+      <Encabezado
+        titulo="Listado de gastos"
+        descripcion="Así se verán tus gastos cuando los registres."
+      />
 
       <FlatList
         data={gastosDeEjemplo}
@@ -32,10 +32,14 @@ export default function PantallaGastos({ onVolver }) {
         )}
       />
 
-      <Pressable style={styles.botonVolver} onPress={onVolver}>
+      <Pressable
+        style={styles.botonVolver}
+        onPress={() => navigation.navigate('Inicio')}
+        accessibilityRole="button"
+      >
         <Text style={styles.textoBotonVolver}>Volver al inicio</Text>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -43,25 +47,11 @@ const styles = StyleSheet.create({
   contenedor: {
     flex: 1,
     backgroundColor: '#F3F4F6',
-    padding: 24,
-    paddingTop: 60,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 12,
   },
-  titulo: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  descripcion: {
-    fontSize: 16,
-    color: '#4B5563',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  lista: {
-    paddingBottom: 16,
-  },
+  lista: { paddingBottom: 16 },
   tarjetaGasto: {
     backgroundColor: '#FFFFFF',
     padding: 18,
@@ -79,18 +69,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flexShrink: 1,
   },
-  montoGasto: {
-    fontSize: 16,
-    color: '#2563EB',
-    fontWeight: 'bold',
-  },
-  botonVolver: {
-    padding: 14,
-    alignItems: 'center',
-  },
-  textoBotonVolver: {
-    color: '#2563EB',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  montoGasto: { fontSize: 16, color: '#2563EB', fontWeight: 'bold' },
+  botonVolver: { padding: 14, alignItems: 'center' },
+  textoBotonVolver: { color: '#2563EB', fontSize: 16, fontWeight: '600' },
 });
