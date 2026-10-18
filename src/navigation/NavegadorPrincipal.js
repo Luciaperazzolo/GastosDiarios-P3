@@ -25,7 +25,7 @@ export default function NavegadorPrincipal() {
       <Stack.Screen
         name={RUTAS.FORMULARIO}
         component={FormularioNuevoGasto}
-        options={{ title: 'Nuevo gasto' }}
+        options={{ title: 'Nuevo gasto', presentation: 'modal' }}
       />
       <Stack.Screen
         name={RUTAS.DETALLE_GASTO}
