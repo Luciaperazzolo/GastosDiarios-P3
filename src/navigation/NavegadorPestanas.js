@@ -1,45 +1,42 @@
-import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import PantallaInicio from '../screens/PantallaInicio';
 import PantallaGastos from '../screens/PantallaGastos';
+import PantallaConfiguracion from '../screens/PantallaConfiguracion';
+import { RUTAS } from './rutas';
 
 const Tab = createBottomTabNavigator();
 
-// Tab: la barra inferior permite cambiar entre Inicio y Gastos.
+// Íconos de cada pestaña: el primero es el activo y el segundo el inactivo.
+const ICONOS = {
+  [RUTAS.INICIO]: ['home', 'home-outline'],
+  [RUTAS.GASTOS]: ['list', 'list-outline'],
+  [RUTAS.CONFIGURACION]: ['settings', 'settings-outline'],
+};
+
+// Tab: la barra inferior permite cambiar entre Inicio, Gastos y Configuración.
 export default function NavegadorPestanas() {
   return (
     <Tab.Navigator
-      initialRouteName="Inicio"
-      screenOptions={{
+      initialRouteName={RUTAS.INICIO}
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: '#2563EB',
         tabBarInactiveTintColor: '#6B7280',
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5E7EB',
-        },
+        tabBarStyle: { backgroundColor: '#FFFFFF', borderTopColor: '#E5E7EB' },
         tabBarLabelStyle: { fontSize: 13, fontWeight: '600' },
-      }}
+        tabBarIcon: ({ color, size, focused }) => {
+          const [activo, inactivo] = ICONOS[route.name];
+          return <Ionicons name={focused ? activo : inactivo} size={size} color={color} />;
+        },
+      })}
     >
+      <Tab.Screen name={RUTAS.INICIO} component={PantallaInicio} />
+      <Tab.Screen name={RUTAS.GASTOS} component={PantallaGastos} />
       <Tab.Screen
-        name="Inicio"
-        component={PantallaInicio}
-        options={{
-          tabBarLabel: 'Inicio',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 23 }}>⌂</Text>
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Gastos"
-        component={PantallaGastos}
-        options={{
-          tabBarLabel: 'Gastos',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 20 }}>☷</Text>
-          ),
-        }}
+        name={RUTAS.CONFIGURACION}
+        component={PantallaConfiguracion}
+        options={{ tabBarLabel: 'Ajustes' }}
       />
     </Tab.Navigator>
   );

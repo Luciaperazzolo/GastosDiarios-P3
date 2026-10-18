@@ -1,6 +1,7 @@
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Encabezado from '../components/Encabezado';
+import { RUTAS } from '../navigation/rutas';
 
 // User Story #5: gastos de ejemplo que se mantienen en la demostración.
 const gastosDeEjemplo = [
@@ -23,18 +24,21 @@ export default function PantallaGastos({ navigation }) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.lista}
         renderItem={({ item }) => (
-          <View style={styles.tarjetaGasto}>
+          <Pressable
+            style={styles.tarjetaGasto}
+            onPress={() => navigation.navigate(RUTAS.DETALLE_GASTO, { gasto: item })}
+          >
             <Text style={styles.nombreGasto}>{item.descripcion}</Text>
             <Text style={styles.montoGasto}>
               ${item.monto.toLocaleString('es-AR')}
             </Text>
-          </View>
+          </Pressable>
         )}
       />
 
       <Pressable
         style={styles.botonVolver}
-        onPress={() => navigation.navigate('Inicio')}
+        onPress={() => navigation.navigate(RUTAS.INICIO)}
         accessibilityRole="button"
       >
         <Text style={styles.textoBotonVolver}>Volver al inicio</Text>
