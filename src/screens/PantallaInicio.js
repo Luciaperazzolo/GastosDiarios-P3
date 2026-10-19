@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Encabezado from '../components/Encabezado';
 import Boton from '../components/Boton';
@@ -9,16 +9,16 @@ export default function PantallaInicio({ navigation }) {
   return (
     <SafeAreaView edges={['top']} style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>ExpenseTracker</Text>
+        <Image
+          source={require('../../assets/icon.png')}
+          style={styles.iconoApp}
+          resizeMode="contain"
+          accessibilityLabel="Ícono de ExpenseTracker"
+        />
+      <Text style={styles.title}>ExpenseTracker</Text>
         <Encabezado
           titulo="¡Bienvenido/a!"
           descripcion="Una forma sencilla de registrar y organizar tus gastos diarios."
-        />
-
-        {/* La acción se envía al StackNavigator que contiene las pestañas. */}
-        <Boton
-          titulo="Nuevo gasto"
-          onPress={() => navigation.navigate(RUTAS.FORMULARIO)}
         />
 
         {/* Esta acción cambia a la pestaña Gastos. */}
@@ -57,4 +57,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   separacion: { marginTop: 12 },
+
+  iconoApp: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
+  },
 });

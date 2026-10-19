@@ -4,20 +4,29 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Encabezado from '../components/Encabezado';
 
 // El StackNavigator proporciona el objeto navigation directamente.
-export default function FormularioNuevoGasto({ navigation }) {
+export default function FormularioNuevoGasto({ navigation, onGuardarGasto }) {
   const [nombre, setNombre] = useState('');
   const [monto, setMonto] = useState('');
   const [categoria, setCategoria] = useState('Comida');
 
   const guardarGasto = () => {
-    // Se mantiene la validación y el aviso que ya existían en el formulario.
     if (!nombre.trim() || !monto.trim()) {
       Alert.alert('Campos incompletos', 'Ingresá el nombre y el monto del gasto.');
       return;
     }
-    Alert.alert('Formulario completado', `Gasto: ${nombre}
-Monto: $${monto}
-Categoría: ${categoria}`);
+    const montoNumerico = Number(monto.replace(',', '.'));
+    if (!Number.isFinite(montoNumerico) || montoNumerico <= 0) {
+      Alert.alert('Monto inválido', 'Ingresá un monto numérico mayor que cero.');
+      return;
+    }
+    const nuevoGasto = {
+      id: Date.now().toString(),
+      descripcion: nombre.trim(),
+      monto: montoNumerico,
+      categoria: categoria,
+    };
+    onGuardarGasto(nuevoGasto);
+    navigation.goBack();
   };
 
   return (
