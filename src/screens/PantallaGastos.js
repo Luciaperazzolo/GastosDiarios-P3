@@ -21,6 +21,15 @@ export default function PantallaGastos({ navigation }) {
         data={expenses}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.lista}
+        ListEmptyComponent={
+          <View style={styles.estadoVacio}>
+            <Ionicons name="wallet-outline" size={48} color="#9CA3AF" />
+            <Text style={styles.tituloVacio}>Todavía no registraste gastos</Text>
+            <Text style={styles.textoVacio}>
+              Tocá el botón + para agregar el primero.
+            </Text>
+          </View>
+        }
         renderItem={({ item }) => {
         const estiloCategoria = getCategory(item.categoria);
 
@@ -84,6 +93,14 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   lista: { paddingBottom: 16 },
+  estadoVacio: { alignItems: 'center', paddingVertical: 48, gap: 8 },
+  tituloVacio: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    textAlign: 'center',
+  },
+  textoVacio: { fontSize: 14, color: '#6B7280', textAlign: 'center' },
   tarjetaGasto: {
     backgroundColor: '#FFFFFF',
     padding: 18,

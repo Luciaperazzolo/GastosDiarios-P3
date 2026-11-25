@@ -17,8 +17,8 @@ function formatearFecha(fecha) {
 
 // Muestra el detalle de un gasto: recibe solo el id y lo busca en el Context.
 export default function PantallaDetalleGasto({ route, navigation }) {
-  // route.params contiene lo que se envió en navigation.navigate(..., { gasto }).
-    const { id } = route.params;
+
+  const { id } = route.params;
     const { expenses, removeExpense } = useExpenses();
     const gasto = expenses.find((item) => item.id === id);
 
