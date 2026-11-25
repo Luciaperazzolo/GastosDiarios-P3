@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import Encabezado from '../components/Encabezado';
 import { useExpenses } from '../context/ExpensesContext';
 
@@ -16,10 +16,10 @@ function formatearFecha(fecha) {
 }
 
 // Muestra el detalle de un gasto: recibe solo el id y lo busca en el Context.
-export default function PantallaDetalleGasto({ route }) {
+export default function PantallaDetalleGasto({ route, navigation }) {
   // route.params contiene lo que se envió en navigation.navigate(..., { gasto }).
     const { id } = route.params;
-    const { expenses } = useExpenses();
+    const { expenses, removeExpense } = useExpenses();
     const gasto = expenses.find((item) => item.id === id);
 
     // Si el gasto no existe (por ejemplo, fue eliminado), se avisa.
@@ -31,12 +31,38 @@ export default function PantallaDetalleGasto({ route }) {
       );
     }
 
+  // Pide confirmación antes de borrar; si la persona acepta, vuelve al listado.
+  const confirmarEliminacion = () => {
+    Alert.alert(
+      'Eliminar gasto',
+      `¿Querés eliminar "${gasto.descripcion}"? Esta acción no se puede deshacer.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            navigation.goBack();
+            removeExpense(gasto.id);
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.contenedor}>
       <Encabezado titulo={gasto.descripcion} />
       <Text style={styles.monto}>${gasto.monto.toLocaleString('es-AR')}</Text>
       <Text style={styles.fecha}>{formatearFecha(gasto.fecha)}</Text>
       <Text style={styles.notas}>{gasto.notas || 'Sin notas adicionales.'}</Text>
+      <Pressable
+        style={styles.botonEliminar}
+        onPress={confirmarEliminacion}
+        accessibilityRole="button"
+      >
+      <Text style={styles.textoEliminar}>Eliminar</Text>
+      </Pressable>
     </View>
   );
 }
@@ -52,4 +78,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
   },
+  botonEliminar: {
+    marginTop: 32,
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DC2626',
+    backgroundColor: '#FFFFFF',
+  },
+  textoEliminar: { color: '#DC2626', fontSize: 17, fontWeight: 'bold' },
 });
