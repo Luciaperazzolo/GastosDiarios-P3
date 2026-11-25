@@ -4,25 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Encabezado from '../components/Encabezado';
 import { RUTAS } from '../navigation/rutas';
 import { useExpenses } from '../context/ExpensesContext';
-
-const ESTILO_CATEGORIAS = {
-  Comida: {
-    color: '#16A34A',
-    icono: 'restaurant-outline',
-  },
-  Transporte: {
-    color: '#2563EB',
-    icono: 'car-outline',
-  },
-  Servicios: {
-    color: '#9333EA',
-    icono: 'home-outline',
-  },
-  Otros: {
-    color: '#EA580C',
-    icono: 'pricetag-outline',
-  },
-};
+import { getCategory } from '../data/categories';
 
 // User Story #6: esta pantalla se muestra a través del TabNavigator.
 export default function PantallaGastos({ navigation }) {
@@ -40,8 +22,7 @@ export default function PantallaGastos({ navigation }) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.lista}
         renderItem={({ item }) => {
-        const estiloCategoria =
-        ESTILO_CATEGORIAS[item.categoria] ?? ESTILO_CATEGORIAS.Otros;
+        const estiloCategoria = getCategory(item.categoria);
 
     return (
     <Pressable
