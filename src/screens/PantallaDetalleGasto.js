@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Encabezado from '../components/Encabezado';
+import { useExpenses } from '../context/ExpensesContext';
 
 // Convierte la fecha ISO del gasto a un texto legible en español.
 function formatearFecha(fecha) {
@@ -14,10 +15,21 @@ function formatearFecha(fecha) {
       });
 }
 
-// Muestra el gasto que recibe por parámetros desde el listado.
+// Muestra el detalle de un gasto: recibe solo el id y lo busca en el Context.
 export default function PantallaDetalleGasto({ route }) {
   // route.params contiene lo que se envió en navigation.navigate(..., { gasto }).
-  const { gasto } = route.params;
+    const { id } = route.params;
+    const { expenses } = useExpenses();
+    const gasto = expenses.find((item) => item.id === id);
+
+    // Si el gasto no existe (por ejemplo, fue eliminado), se avisa.
+    if (!gasto) {
+      return (
+        <View style={styles.contenedor}>
+          <Encabezado titulo="Gasto no encontrado" />
+        </View>
+      );
+    }
 
   return (
     <View style={styles.contenedor}>

@@ -27,7 +27,7 @@ export default function PantallaGastos({ navigation }) {
     return (
     <Pressable
       style={styles.tarjetaGasto}
-      onPress={() => navigation.navigate(RUTAS.DETALLE_GASTO, { gasto: item })}
+      onPress={() => navigation.navigate(RUTAS.DETALLE_GASTO, { id: item.id })}
     >
       <View style={styles.infoGasto}>
         <View
