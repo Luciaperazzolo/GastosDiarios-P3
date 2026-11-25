@@ -3,9 +3,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Encabezado from '../components/Encabezado';
 import Boton from '../components/Boton';
 import { RUTAS } from '../navigation/rutas';
+import { useExpenses } from '../context/ExpensesContext';
 
 // Pantalla de bienvenida: ahora es una pantalla real del TabNavigator.
 export default function PantallaInicio({ navigation }) {
+  const { expenses } = useExpenses();
+  const totalGastos = expenses.reduce((total, gasto) => total + gasto.monto, 0);
   return (
     <SafeAreaView edges={['top']} style={styles.container}>
       <View style={styles.card}>
@@ -14,6 +17,7 @@ export default function PantallaInicio({ navigation }) {
           style={styles.iconoApp}
           resizeMode="contain"
           accessibilityLabel="Ícono de ExpenseTracker"
+          
         />
       <Text style={styles.title}>ExpenseTracker</Text>
         <Encabezado
@@ -28,6 +32,27 @@ export default function PantallaInicio({ navigation }) {
           estilo={styles.separacion}
           onPress={() => navigation.navigate(RUTAS.GASTOS)}
         />
+      </View>
+
+            <View style={[styles.card, styles.tarjetaResumen]}>
+        <Text style={styles.tituloResumen}>Resumen de gastos</Text>
+
+        {expenses.length === 0 ? (
+          <Text style={styles.textoVacio}>Todavía no registraste gastos</Text>
+        ) : (
+          <View style={styles.filaResumen}>
+            <View style={styles.dato}>
+              <Text style={styles.etiquetaDato}>Total registrado</Text>
+              <Text style={styles.valorDato}>
+                ${totalGastos.toLocaleString('es-AR')}
+              </Text>
+            </View>
+            <View style={styles.dato}>
+              <Text style={styles.etiquetaDato}>Movimientos</Text>
+              <Text style={styles.valorDato}>{expenses.length}</Text>
+            </View>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -57,10 +82,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   separacion: { marginTop: 12 },
-
-  iconoApp: {
-    width: 80,
-    height: 80,
+    tarjetaResumen: { marginTop: 16 },
+  tituloResumen: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1F2937',
     marginBottom: 16,
+  },
+  filaResumen: { flexDirection: 'row', gap: 12, width: '100%' },
+  dato: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 6,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+  },
+  etiquetaDato: { fontSize: 13, color: '#4B5563', textAlign: 'center' },
+  valorDato: { fontSize: 20, fontWeight: 'bold', color: '#2563EB' },
+  textoVacio: { fontSize: 15, color: '#6B7280', textAlign: 'center' },
+  iconoApp: { width: 80, height: 80, marginBottom: 16,
   },
 });
