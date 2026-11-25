@@ -1,4 +1,6 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { STORAGE_KEYS } from '../data/storageKeys';
 
 // Context que centraliza los gastos: las pantallas solo usan useExpenses().
 const ExpensesContext = createContext(null);
@@ -9,9 +11,27 @@ function generarId() {
 }
 
 export function ExpensesProvider({ children }) {
-  // US #1: estado volátil. La persistencia llega en las US #3 y #5.
+  // Estado de los gastos y bandera que indica si ya se leyó el almacenamiento.
   const [expenses, setExpenses] = useState([]);
-  const isLoaded = true;
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Hidratación: al montar, lee los gastos guardados y recién ahí marca isLoaded.
+  useEffect(() => {
+    const cargarGastos = async () => {
+      try {
+        const guardado = await AsyncStorage.getItem(STORAGE_KEYS.EXPENSES);
+        if (guardado) {
+          const datos = JSON.parse(guardado);
+          if (Array.isArray(datos)) setExpenses(datos);
+        }
+      } catch (error) {
+        console.error('No se pudieron leer los gastos guardados:', error);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+    cargarGastos();
+  }, []);
 
   // Recibe descripcion, monto y categoria; el id y la fecha los genera el Provider.
   const addExpense = (data) => {
