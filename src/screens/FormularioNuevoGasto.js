@@ -24,6 +24,8 @@ export default function FormularioNuevoGasto({ navigation, onGuardarGasto }) {
       descripcion: nombre.trim(),
       monto: montoNumerico,
       categoria: categoria,
+      notas: '',
+      fecha: new Date().toISOString(),
     };
     onGuardarGasto(nuevoGasto);
     navigation.goBack();
