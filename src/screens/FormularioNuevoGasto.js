@@ -3,13 +3,14 @@ import { Alert, StyleSheet, Text, TextInput, View, Pressable } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Encabezado from '../components/Encabezado';
 import { useExpenses } from '../context/ExpensesContext';
+import { CATEGORIES, DEFAULT_CATEGORY } from '../data/categories';
 
 // El StackNavigator proporciona el objeto navigation directamente.
 export default function FormularioNuevoGasto({ navigation }) {
   const { addExpense } = useExpenses();
   const [nombre, setNombre] = useState('');
   const [monto, setMonto] = useState('');
-  const [categoria, setCategoria] = useState('Comida');
+  const [categoria, setCategoria] = useState(DEFAULT_CATEGORY);
 
   const guardarGasto = () => {
     if (!nombre.trim() || !monto.trim()) {
@@ -53,7 +54,7 @@ export default function FormularioNuevoGasto({ navigation }) {
 
       <Text style={styles.etiqueta}>Categoría</Text>
       <View style={styles.categorias}>
-        {['Comida', 'Transporte', 'Servicios', 'Otros'].map((opcion) => (
+        { CATEGORIES.map(({ nombre: opcion }) => (
           <Pressable
             key={opcion}
             style={[
