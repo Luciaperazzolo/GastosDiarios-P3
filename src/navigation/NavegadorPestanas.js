@@ -19,7 +19,7 @@ const ICONOS = {
 };
 
 // Tab: la barra inferior permite cambiar entre Inicio, Gastos y Configuración.
-export default function NavegadorPestanas({ gastos }) {
+export default function NavegadorPestanas() {
   return (
     <Tab.Navigator
       initialRouteName={RUTAS.INICIO}
@@ -64,14 +64,7 @@ export default function NavegadorPestanas({ gastos }) {
         })}
       />
 
-      <Tab.Screen name={RUTAS.GASTOS}>
-        {(props) => (
-          <PantallaGastos
-            {...props}
-            gastos={gastos}
-          />
-        )}
-      </Tab.Screen>
+      <Tab.Screen name={RUTAS.GASTOS} component={PantallaGastos} />
 
       <Tab.Screen
         name={RUTAS.CONFIGURACION}
