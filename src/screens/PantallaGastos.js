@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Encabezado from '../components/Encabezado';
 import { RUTAS } from '../navigation/rutas';
+import { useExpenses } from '../context/ExpensesContext';
 
 const ESTILO_CATEGORIAS = {
   Comida: {
@@ -24,8 +25,9 @@ const ESTILO_CATEGORIAS = {
 };
 
 // User Story #6: esta pantalla se muestra a través del TabNavigator.
-export default function PantallaGastos({ navigation, gastos }) {
-  const totalGastos = gastos.reduce((total, gasto) => total + gasto.monto, 0);
+export default function PantallaGastos({ navigation }) {
+  const { expenses } = useExpenses();
+  const totalGastos = expenses.reduce((total, gasto) => total + gasto.monto, 0);
   return (
     <SafeAreaView edges={['top']} style={styles.contenedor}>
       <Encabezado
@@ -34,7 +36,7 @@ export default function PantallaGastos({ navigation, gastos }) {
       />
 
       <FlatList
-        data={gastos}
+        data={expenses}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.lista}
         renderItem={({ item }) => {
