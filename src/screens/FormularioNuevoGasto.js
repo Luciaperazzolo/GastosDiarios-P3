@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Encabezado from '../components/Encabezado';
+import { useExpenses } from '../context/ExpensesContext';
 
 // El StackNavigator proporciona el objeto navigation directamente.
-export default function FormularioNuevoGasto({ navigation, onGuardarGasto }) {
+export default function FormularioNuevoGasto({ navigation }) {
+  const { addExpense } = useExpenses();
   const [nombre, setNombre] = useState('');
   const [monto, setMonto] = useState('');
   const [categoria, setCategoria] = useState('Comida');
@@ -20,14 +22,11 @@ export default function FormularioNuevoGasto({ navigation, onGuardarGasto }) {
       return;
     }
     const nuevoGasto = {
-      id: Date.now().toString(),
       descripcion: nombre.trim(),
       monto: montoNumerico,
       categoria: categoria,
-      notas: '',
-      fecha: new Date().toISOString(),
     };
-    onGuardarGasto(nuevoGasto);
+    addExpense(nuevoGasto);
     navigation.goBack();
   };
 
