@@ -33,6 +33,26 @@ export function ExpensesProvider({ children }) {
     cargarGastos();
   }, []);
 
+
+  // Persistencia: guarda los gastos cada vez que cambian, pero solo después
+  // de hidratar. Sin esta guarda se podría pisar lo guardado con la lista vacía.
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const guardarGastos = async () => {
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.EXPENSES,
+          JSON.stringify(expenses)
+        );
+      } catch (error) {
+        console.error('No se pudieron guardar los gastos:', error);
+      }
+    };
+    guardarGastos();
+  }, [expenses, isLoaded]);
+
+  
   // Recibe descripcion, monto y categoria; el id y la fecha los genera el Provider.
   const addExpense = (data) => {
     const nuevoGasto = {
