@@ -186,3 +186,50 @@ También verificamos la creación de gastos sin conexión y su posterior sincron
 Las pruebas permitieron identificar una diferencia importante: nuestra PWA conserva cambios pendientes después de cerrar el navegador, mientras que en React Native observamos que podían perderse al cerrar Expo Go.
 
 La implementación cumple con los objetivos principales de persistencia y sincronización, aunque todavía quedan algunas evidencias y pruebas complementarias pendientes.
+
+## 11. Bonus (US #7)
+
+En React Native implementamos los tres puntos del Bonus.
+
+### 11.1 Editar un gasto
+
+Agregamos al Context la función `updateExpense(id, data)`, que usa `updateDoc()` para modificar `title`, `amount`, `category` y `notes` del documento. El campo `createdAt` no cambia. Igual que al agregar un gasto, no esperamos la respuesta del servidor, por lo que la edición también funciona sin conexión y `onSnapshot()` muestra el cambio desde la caché local.
+
+Reutilizamos el formulario de alta: si recibe un `id` por parámetro, funciona en modo edición. Precarga los datos del gasto, cambia el título a "Editar gasto" y guarda con `updateExpense`. Para eso agregamos el campo de notas al formulario y un botón "Editar" en la pantalla de detalle.
+
+La comprobación de que la edición se ve en tiempo real en la PWA no se hizo desde este repositorio.
+
+### 11.2 Indicador de conexión
+
+Instalamos `@react-native-community/netinfo` y creamos el componente `AvisoSinConexion`, que usa el hook `useNetInfo()` y muestra un cartel "Sin conexión" cuando el dispositivo no tiene conexión. Se monta en `App.js` sobre la navegación. Lo probamos activando y desactivando el modo avión.
+
+### 11.3 Autenticación anónima
+
+Inicializamos Firebase Authentication en `firebase.js` con `initializeAuth` y `getReactNativePersistence(AsyncStorage)`, para que la sesión se conserve al cerrar la app. En el Context, `onAuthStateChanged` recupera la sesión guardada y, si no existe, llama a `signInAnonymously()`. Al reabrir la app se mantiene el mismo usuario.
+
+Los gastos pasaron a guardarse en `users/{uid}/expenses`. El listado espera a tener el `uid` antes de suscribirse con `onSnapshot()`, y el alta, la baja y la edición usan la misma ruta.
+
+**Limitación:** la primera vez que se abre la app hace falta conexión para crear la sesión anónima. Después, la sesión guardada permite abrirla sin conexión.
+
+**Reglas de Firestore propuestas.** Para que cada persona solo pueda leer y escribir sus propios gastos:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/expenses/{expenseId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
+```
+
+No las publicamos. Hoy el proyecto usa reglas de modo de prueba (válidas hasta el 25/12/2026) y publicarlas dejaría a la PWA sin acceso a la colección `expenses`, que sigue usando.
+
+**Consecuencia: las apps ya no comparten gastos.** Cada aplicación tiene su propio usuario anónimo, con un `uid` distinto, por lo que cada una ve solo sus datos. Los gastos que ya estaban en la colección `expenses` no se muestran en la app móvil porque no los migramos.
+
+**Cómo lo resolveríamos:**
+
+1. Usar una identidad que sea la misma en ambas apps, por ejemplo inicio de sesión con email y contraseña o con Google, en la app móvil y en la PWA. Una misma persona tendría el mismo `uid` en las dos y ambas leerían `users/{uid}/expenses`.
+2. Para no perder los gastos ya cargados, convertir la cuenta anónima en una cuenta permanente con `linkWithCredential()`, que conserva el `uid`.
+3. Migrar los documentos de la colección `expenses` a la ruta del usuario.
