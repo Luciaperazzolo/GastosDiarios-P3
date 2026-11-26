@@ -1,49 +1,283 @@
-import { createContext, useContext, useState } from 'react';
 
-// Context que centraliza los gastos: las pantallas solo usan useExpenses().
+import { createContext, useContext, useEffect, useState,} from 'react';
+
+import { Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+} from 'firebase/firestore';
+
+import { db } from '../services/firebase';
+import { SETTINGS_STORAGE_KEY } from '../data/storageKeys';
+
+// Context que comparte los gastos y ajustes entre las pantallas.
 const ExpensesContext = createContext(null);
 
-// Genera un id único para cada gasto nuevo.
-function generarId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
+// Valores iniciales de los ajustes.
+const AJUSTES_INICIALES = {
+  notificaciones: false,
+  modoOscuro: false,
+};
+
+// Colección de Firestore donde guardaremos los gastos.
+const gastosRef = collection(db, 'expenses');
 
 export function ExpensesProvider({ children }) {
-  // US #1: estado volátil. La persistencia llega en las US #3 y #5.
   const [expenses, setExpenses] = useState([]);
-  const isLoaded = true;
+  const [settings, setSettings] = useState(AJUSTES_INICIALES);
 
-  // Recibe descripcion, monto y categoria; el id y la fecha los genera el Provider.
+  // Controlamos por separado la carga de gastos y ajustes.
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [firestoreLoaded, setFirestoreLoaded] = useState(false);
+
+  const [errorCarga, setErrorCarga] = useState(null);
+  const [intentoCarga, setIntentoCarga] = useState(0);
+
+  // La aplicación estará lista cuando ambas cargas terminen.
+  const isLoaded =
+    settingsLoaded && firestoreLoaded && !errorCarga;
+
+  // --------------------------------------------------
+  // 1. HIDRATACIÓN DE AJUSTES CON ASYNCSTORAGE
+  // --------------------------------------------------
+  useEffect(() => {
+    let activo = true;
+
+    async function cargarAjustes() {
+      try {
+        const ajustesJSON = await AsyncStorage.getItem(
+          SETTINGS_STORAGE_KEY
+        );
+
+        const ajustesGuardados = ajustesJSON
+          ? JSON.parse(ajustesJSON)
+          : AJUSTES_INICIALES;
+
+        if (
+          !ajustesGuardados ||
+          typeof ajustesGuardados.notificaciones !== 'boolean' ||
+          typeof ajustesGuardados.modoOscuro !== 'boolean'
+        ) {
+          throw new Error('Los ajustes guardados no son válidos.');
+        }
+
+        if (!activo) return;
+
+        setSettings({
+          notificaciones: ajustesGuardados.notificaciones,
+          modoOscuro: ajustesGuardados.modoOscuro,
+        });
+
+        setSettingsLoaded(true);
+      } catch (error) {
+        console.error('Error al cargar ajustes:', error);
+
+        if (activo) {
+          setErrorCarga('No se pudieron recuperar los ajustes.');
+        }
+      }
+    }
+
+    cargarAjustes();
+
+    return () => {
+      activo = false;
+    };
+  }, [intentoCarga]);
+
+  // --------------------------------------------------
+  // 2. ESCUCHAR LOS GASTOS DESDE FIRESTORE
+  // --------------------------------------------------
+  useEffect(() => {
+    let activo = true;
+
+    // Ordenamos los gastos desde el más reciente.
+    const consultaGastos = query(
+      gastosRef,
+      orderBy('createdAt', 'desc')
+    );
+
+    // onSnapshot escucha los cambios en tiempo real.
+    const cancelarSuscripcion = onSnapshot(
+      consultaGastos,
+
+      (snapshot) => {
+        if (!activo) return;
+
+        const gastosActualizados = snapshot.docs.map(
+          (documento) => {
+            const datos = documento.data({
+              serverTimestamps: 'estimate',
+            });
+
+            const fechaFirestore =
+              datos.createdAt?.toDate?.();
+
+            // Convertimos los datos de Firestore a los
+            // nombres que ya utilizan nuestras pantallas.
+            return {
+              id: documento.id,
+              descripcion: datos.title ?? '',
+              monto: datos.amount ?? 0,
+              categoria: datos.category ?? 'Otros',
+              notas: datos.notes ?? '',
+              fecha:
+                fechaFirestore instanceof Date &&
+                !Number.isNaN(fechaFirestore.getTime())
+                  ? fechaFirestore.toISOString()
+                  : '',
+            };
+          }
+        );
+
+        // Actualizamos la lista compartida.
+        setExpenses(gastosActualizados);
+
+        // El primer snapshot indica que los gastos están disponibles.
+        setFirestoreLoaded(true);
+      },
+
+      (error) => {
+        console.error('Error al leer Firestore:', error);
+
+        if (activo) {
+          setErrorCarga(
+            'No se pudieron cargar los gastos desde Firestore.'
+          );
+        }
+      }
+    );
+
+    // Dejamos de escuchar cuando el Provider se desmonta.
+    return () => {
+      activo = false;
+      cancelarSuscripcion();
+    };
+  }, [intentoCarga]);
+
+  // --------------------------------------------------
+  // 3. GUARDAR LOS AJUSTES EN ASYNCSTORAGE
+  // --------------------------------------------------
+  useEffect(() => {
+    // No guardamos hasta terminar la hidratación.
+    if (!settingsLoaded) return;
+
+    async function guardarAjustes() {
+      try {
+        await AsyncStorage.setItem(
+          SETTINGS_STORAGE_KEY,
+          JSON.stringify(settings)
+        );
+      } catch (error) {
+        console.error('Error al guardar ajustes:', error);
+
+        Alert.alert(
+          'Error',
+          'No se pudieron guardar los ajustes.'
+        );
+      }
+    }
+
+    guardarAjustes();
+  }, [settings, settingsLoaded]);
+
+  // --------------------------------------------------
+  // 4. AGREGAR UN GASTO EN FIRESTORE
+  // --------------------------------------------------
   const addExpense = (data) => {
     const nuevoGasto = {
-      id: generarId(),
-      descripcion: data.descripcion,
-      monto: data.monto,
-      categoria: data.categoria,
-      notas: data.notas ?? '',
-      fecha: new Date().toISOString(),
+      title: data.descripcion,
+      amount: data.monto,
+      category: data.categoria,
+      notes: data.notas ?? '',
+      createdAt: serverTimestamp(),
     };
-    setExpenses((actuales) => [nuevoGasto, ...actuales]);
+
+    // Firestore genera el ID automáticamente.
+    // No esperamos la respuesta del servidor para cerrar
+    // el formulario, ya que puede no haber conexión.
+    addDoc(gastosRef, nuevoGasto).catch((error) => {
+      console.error('Error al agregar gasto:', error);
+
+      Alert.alert(
+        'Error',
+        'No se pudo guardar el gasto en Firestore.'
+      );
+    });
   };
 
+  // --------------------------------------------------
+  // 5. ELIMINAR UN GASTO DE FIRESTORE
+  // --------------------------------------------------
   const removeExpense = (id) => {
-    setExpenses((actuales) => actuales.filter((gasto) => gasto.id !== id));
+    const gastoRef = doc(db, 'expenses', id);
+
+    deleteDoc(gastoRef).catch((error) => {
+      console.error('Error al eliminar gasto:', error);
+
+      Alert.alert(
+        'Error',
+        'No se pudo eliminar el gasto de Firestore.'
+      );
+    });
   };
 
+  // --------------------------------------------------
+  // 6. ACTUALIZAR LOS AJUSTES
+  // --------------------------------------------------
+  const updateSettings = (cambios) => {
+    setSettings((actuales) => ({
+      ...actuales,
+      ...cambios,
+    }));
+  };
+
+  // Permite reintentar si ocurre un error de carga.
+  const reintentarCarga = () => {
+    setErrorCarga(null);
+    setSettingsLoaded(false);
+    setFirestoreLoaded(false);
+    setIntentoCarga((actual) => actual + 1);
+  };
+
+  // --------------------------------------------------
+  // 7. COMPARTIR LOS DATOS CON LAS PANTALLAS
+  // --------------------------------------------------
   return (
     <ExpensesContext.Provider
-      value={{ expenses, isLoaded, addExpense, removeExpense }}
+      value={{
+        expenses,
+        isLoaded,
+        addExpense,
+        removeExpense,
+        settings,
+        updateSettings,
+        errorCarga,
+        reintentarCarga,
+      }}
     >
       {children}
     </ExpensesContext.Provider>
   );
 }
 
-// Custom hook: devuelve el valor del Context.
+// Hook que permite acceder al Context.
 export function useExpenses() {
   const contexto = useContext(ExpensesContext);
+
   if (!contexto) {
-    throw new Error('useExpenses debe usarse dentro de ExpensesProvider');
+    throw new Error(
+      'useExpenses debe usarse dentro de ExpensesProvider'
+    );
   }
+
   return contexto;
 }
