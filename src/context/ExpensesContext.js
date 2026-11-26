@@ -1,9 +1,6 @@
-
 import { createContext, useContext, useEffect, useState,} from 'react';
-
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import {
   addDoc,
   collection,
@@ -15,8 +12,8 @@ import {
   serverTimestamp,
   updateDoc,
 } from 'firebase/firestore';
-
-import { db } from '../services/firebase';
+import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
+import { auth, db } from '../services/firebase';
 import { SETTINGS_STORAGE_KEY } from '../data/storageKeys';
 
 // Context que comparte los gastos y ajustes entre las pantallas.
@@ -28,8 +25,8 @@ const AJUSTES_INICIALES = {
   modoOscuro: false,
 };
 
-// Colección de Firestore donde guardaremos los gastos.
-const gastosRef = collection(db, 'expenses');
+// Cada persona usuaria (anónima) guarda sus gastos en users/{uid}/expenses.
+const getGastosRef = (uid) => collection(db, 'users', uid, 'expenses');
 
 export function ExpensesProvider({ children }) {
   const [expenses, setExpenses] = useState([]);
@@ -42,9 +39,42 @@ export function ExpensesProvider({ children }) {
   const [errorCarga, setErrorCarga] = useState(null);
   const [intentoCarga, setIntentoCarga] = useState(0);
 
+  // Identificador del usuario anónimo de Firebase Authentication.
+  const [uid, setUid] = useState(null);
+
   // La aplicación estará lista cuando ambas cargas terminen.
   const isLoaded =
     settingsLoaded && firestoreLoaded && !errorCarga;
+
+  // --------------------------------------------------
+  // 0. AUTENTICACIÓN ANÓNIMA
+  // --------------------------------------------------
+  useEffect(() => {
+    let activo = true;
+
+    // Si hay una sesión guardada, se recupera; si no, se crea una anónima.
+    const cancelarSuscripcion = onAuthStateChanged(auth, (usuario) => {
+      if (!activo) return;
+
+      if (usuario) {
+        setUid(usuario.uid);
+        return;
+      }
+
+      signInAnonymously(auth).catch((error) => {
+        console.error('Error al iniciar sesión anónima:', error);
+
+        if (activo) {
+          setErrorCarga('No se pudo iniciar la sesión.');
+        }
+      });
+    });
+
+    return () => {
+      activo = false;
+      cancelarSuscripcion();
+    };
+  }, [intentoCarga]);
 
   // --------------------------------------------------
   // 1. HIDRATACIÓN DE AJUSTES CON ASYNCSTORAGE
@@ -98,11 +128,14 @@ export function ExpensesProvider({ children }) {
   // 2. ESCUCHAR LOS GASTOS DESDE FIRESTORE
   // --------------------------------------------------
   useEffect(() => {
+    // Sin sesión todavía no sabemos qué colección leer.
+    if (!uid) return;
+
     let activo = true;
 
     // Ordenamos los gastos desde el más reciente.
     const consultaGastos = query(
-      gastosRef,
+      getGastosRef(uid),
       orderBy('createdAt', 'desc')
     );
 
@@ -162,7 +195,7 @@ export function ExpensesProvider({ children }) {
       activo = false;
       cancelarSuscripcion();
     };
-  }, [intentoCarga]);
+  }, [uid, intentoCarga]);
 
   // --------------------------------------------------
   // 3. GUARDAR LOS AJUSTES EN ASYNCSTORAGE
@@ -194,6 +227,8 @@ export function ExpensesProvider({ children }) {
   // 4. AGREGAR UN GASTO EN FIRESTORE
   // --------------------------------------------------
   const addExpense = (data) => {
+    if (!uid) return;
+
     const nuevoGasto = {
       title: data.descripcion,
       amount: data.monto,
@@ -205,7 +240,7 @@ export function ExpensesProvider({ children }) {
     // Firestore genera el ID automáticamente.
     // No esperamos la respuesta del servidor para cerrar
     // el formulario, ya que puede no haber conexión.
-    addDoc(gastosRef, nuevoGasto).catch((error) => {
+    addDoc(getGastosRef(uid), nuevoGasto).catch((error) => {
       console.error('Error al agregar gasto:', error);
 
       Alert.alert(
@@ -219,7 +254,9 @@ export function ExpensesProvider({ children }) {
   // 5. ELIMINAR UN GASTO DE FIRESTORE
   // --------------------------------------------------
   const removeExpense = (id) => {
-    const gastoRef = doc(db, 'expenses', id);
+    if (!uid) return;
+
+    const gastoRef = doc(db, 'users', uid, 'expenses', id);
 
     deleteDoc(gastoRef).catch((error) => {
       console.error('Error al eliminar gasto:', error);
@@ -235,7 +272,9 @@ export function ExpensesProvider({ children }) {
   // 5.1 EDITAR UN GASTO EN FIRESTORE
   // --------------------------------------------------
   const updateExpense = (id, data) => {
-    const gastoRef = doc(db, 'expenses', id);
+    if (!uid) return;
+
+    const gastoRef = doc(db, 'users', uid, 'expenses', id);
 
     // Solo se modifican estos campos: createdAt no cambia.
     // Igual que al agregar, no esperamos al servidor para
@@ -255,7 +294,6 @@ export function ExpensesProvider({ children }) {
     });
   };
 
-
   // --------------------------------------------------
   // 6. ACTUALIZAR LOS AJUSTES
   // --------------------------------------------------
@@ -269,6 +307,7 @@ export function ExpensesProvider({ children }) {
   // Permite reintentar si ocurre un error de carga.
   const reintentarCarga = () => {
     setErrorCarga(null);
+    setUid(null);
     setSettingsLoaded(false);
     setFirestoreLoaded(false);
     setIntentoCarga((actual) => actual + 1);
