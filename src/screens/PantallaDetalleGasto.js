@@ -1,6 +1,7 @@
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import Encabezado from '../components/Encabezado';
 import { useExpenses } from '../context/ExpensesContext';
+import { RUTAS } from '../navigation/rutas';
 
 // Convierte la fecha ISO del gasto a un texto legible en español.
 function formatearFecha(fecha) {
@@ -57,6 +58,13 @@ export default function PantallaDetalleGasto({ route, navigation }) {
       <Text style={styles.fecha}>{formatearFecha(gasto.fecha)}</Text>
       <Text style={styles.notas}>{gasto.notas || 'Sin notas adicionales.'}</Text>
       <Pressable
+        style={styles.botonEditar}
+        onPress={() => navigation.navigate(RUTAS.FORMULARIO, { id: gasto.id })}
+        accessibilityRole="button"
+      >
+        <Text style={styles.textoEditar}>Editar</Text>
+      </Pressable>
+      <Pressable
         style={styles.botonEliminar}
         onPress={confirmarEliminacion}
         accessibilityRole="button"
@@ -78,8 +86,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
   },
-  botonEliminar: {
+    botonEditar: {
     marginTop: 32,
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: '#2563EB',
+  },
+  textoEditar: { color: '#FFFFFF', fontSize: 17, fontWeight: 'bold' },
+  botonEliminar: {
+    marginTop: 12,
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',

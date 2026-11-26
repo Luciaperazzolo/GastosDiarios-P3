@@ -6,34 +6,54 @@ import { useExpenses } from '../context/ExpensesContext';
 import { CATEGORIES, DEFAULT_CATEGORY } from '../data/categories';
 
 // El StackNavigator proporciona el objeto navigation directamente.
-export default function FormularioNuevoGasto({ navigation }) {
-  const { addExpense } = useExpenses();
-  const [nombre, setNombre] = useState('');
-  const [monto, setMonto] = useState('');
-  const [categoria, setCategoria] = useState(DEFAULT_CATEGORY);
+export default function FormularioNuevoGasto({ navigation, route }) {
+const { expenses, addExpense, updateExpense } = useExpenses();
+
+  // Si llega un id por parámetro, el formulario funciona en modo edición.
+  const idEdicion = route.params?.id;
+  const gastoEditado = idEdicion
+    ? expenses.find((item) => item.id === idEdicion)
+    : null;
+
+  // En modo edición los campos arrancan con los datos del gasto.
+  const [nombre, setNombre] = useState(gastoEditado?.descripcion ?? '');
+  const [monto, setMonto] = useState(
+    gastoEditado ? String(gastoEditado.monto) : ''
+  );
+  const [categoria, setCategoria] = useState(
+    gastoEditado?.categoria ?? DEFAULT_CATEGORY
+  );
+  const [notas, setNotas] = useState(gastoEditado?.notas ?? '');
 
   const guardarGasto = () => {
     if (!nombre.trim() || !monto.trim()) {
       Alert.alert('Campos incompletos', 'Ingresá el nombre y el monto del gasto.');
       return;
     }
-    const montoNumerico = Number(monto.replace(',', '.'));
+  const montoNumerico = Number(monto.replace(',', '.'));
     if (!Number.isFinite(montoNumerico) || montoNumerico <= 0) {
       Alert.alert('Monto inválido', 'Ingresá un monto numérico mayor que cero.');
       return;
     }
-    const nuevoGasto = {
+
+  const datosGasto = {
       descripcion: nombre.trim(),
       monto: montoNumerico,
       categoria: categoria,
+      notas: notas.trim(),
     };
-    addExpense(nuevoGasto);
+
+    if (idEdicion) {
+      updateExpense(idEdicion, datosGasto);
+    } else {
+      addExpense(datosGasto);
+    }
     navigation.goBack();
   };
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.contenedor}>
-      <Encabezado titulo="Nuevo gasto" />
+       <Encabezado titulo={idEdicion ? 'Editar gasto' : 'Nuevo gasto'} />
 
       <Text style={styles.etiqueta}>Nombre del gasto</Text>
       <TextInput
@@ -50,6 +70,14 @@ export default function FormularioNuevoGasto({ navigation }) {
         value={monto}
         onChangeText={setMonto}
         keyboardType="decimal-pad"
+      />
+
+      <Text style={styles.etiqueta}>Notas (opcional)</Text>
+      <TextInput
+        style={styles.campo}
+        placeholder="Ej.: Compra semanal"
+        value={notas}
+        onChangeText={setNotas}
       />
 
       <Text style={styles.etiqueta}>Categoría</Text>
@@ -76,7 +104,9 @@ export default function FormularioNuevoGasto({ navigation }) {
       </View>
 
       <Pressable style={styles.botonGuardar} onPress={guardarGasto} accessibilityRole="button">
-        <Text style={styles.textoBoton}>Guardar</Text>
+        <Text style={styles.textoBoton}>
+          {idEdicion ? 'Guardar cambios' : 'Guardar'}
+        </Text>
       </Pressable>
 
       <Pressable
