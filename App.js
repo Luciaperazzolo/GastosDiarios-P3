@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text,} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer,} from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView,} from 'react-native-safe-area-context';
 
@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { ExpensesProvider, useExpenses,} from './src/context/ExpensesContext';
 import NavegadorPrincipal from './src/navigation/NavegadorPrincipal';
+import AvisoSinConexion from './src/components/AvisoSinConexion';
 
 // Este componente está dentro del Provider,
 // por eso puede consultar el estado de la carga.
@@ -63,10 +64,15 @@ function ContenidoApp() {
 
   // Cuando terminó la carga, mostramos la navegación habitual.
   return (
-    <NavigationContainer>
-      <StatusBar style="dark" />
-      <NavegadorPrincipal />
-    </NavigationContainer>
+    <View style={styles.raiz}>
+      <NavigationContainer>
+        <StatusBar style="dark" />
+        <NavegadorPrincipal />
+      </NavigationContainer>
+
+      {/* Se muestra encima de todo solo cuando no hay conexión. */}
+      <AvisoSinConexion />
+    </View>
   );
 }
 
@@ -81,7 +87,8 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  estado: {
+    raiz: { flex: 1 },
+    estado: {
     flex: 1,
     backgroundColor: '#F3F4F6',
     alignItems: 'center',
