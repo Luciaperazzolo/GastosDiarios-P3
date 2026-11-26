@@ -13,6 +13,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore';
 
 import { db } from '../services/firebase';
@@ -231,6 +232,31 @@ export function ExpensesProvider({ children }) {
   };
 
   // --------------------------------------------------
+  // 5.1 EDITAR UN GASTO EN FIRESTORE
+  // --------------------------------------------------
+  const updateExpense = (id, data) => {
+    const gastoRef = doc(db, 'expenses', id);
+
+    // Solo se modifican estos campos: createdAt no cambia.
+    // Igual que al agregar, no esperamos al servidor para
+    // poder editar también sin conexión.
+    updateDoc(gastoRef, {
+      title: data.descripcion,
+      amount: data.monto,
+      category: data.categoria,
+      notes: data.notas ?? '',
+    }).catch((error) => {
+      console.error('Error al editar gasto:', error);
+
+      Alert.alert(
+        'Error',
+        'No se pudo editar el gasto en Firestore.'
+      );
+    });
+  };
+
+
+  // --------------------------------------------------
   // 6. ACTUALIZAR LOS AJUSTES
   // --------------------------------------------------
   const updateSettings = (cambios) => {
@@ -258,6 +284,7 @@ export function ExpensesProvider({ children }) {
         isLoaded,
         addExpense,
         removeExpense,
+        updateExpense,
         settings,
         updateSettings,
         errorCarga,
