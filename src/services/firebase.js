@@ -1,5 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Obtenemos la configuración desde el archivo .env
 const firebaseConfig = {
@@ -18,3 +20,19 @@ const app = getApps().length
 
 // Conectamos la aplicación con Cloud Firestore
 export const db = getFirestore(app);
+
+// Autenticación de Firebase. La sesión se guarda en AsyncStorage
+// para que la misma persona anónima se recupere al reabrir la app.
+let authInstancia;
+
+try {
+  authInstancia = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch (error) {
+  // initializeAuth falla si ya se inicializó (por ejemplo, al
+  // recargar la app en desarrollo): en ese caso se reutiliza.
+  authInstancia = getAuth(app);
+}
+
+export const auth = authInstancia;
