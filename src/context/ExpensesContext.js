@@ -63,23 +63,30 @@ export function ExpensesProvider({ children }) {
           SETTINGS_STORAGE_KEY
         );
 
-        const ajustesGuardados = ajustesJSON
-          ? JSON.parse(ajustesJSON)
-          : AJUSTES_INICIALES;
+        let ajustesGuardados = {};
 
-        if (
-          !ajustesGuardados ||
-          typeof ajustesGuardados.notificaciones !== 'boolean' ||
-          typeof ajustesGuardados.modoOscuro !== 'boolean'
-        ) {
-          throw new Error('Los ajustes guardados no son válidos.');
+        if (ajustesJSON) {
+          try {
+            ajustesGuardados = JSON.parse(ajustesJSON) ?? {};
+          } catch {
+            ajustesGuardados = {};
+          }
         }
 
         if (!activo) return;
 
+        // Conservamos los ajustes válidos y recuperamos
+        // los valores iniciales cuando faltan o son inválidos.
         setSettings({
-          notificaciones: ajustesGuardados.notificaciones,
-          modoOscuro: ajustesGuardados.modoOscuro,
+          notificaciones:
+            typeof ajustesGuardados.notificaciones === 'boolean'
+              ? ajustesGuardados.notificaciones
+              : AJUSTES_INICIALES.notificaciones,
+
+          modoOscuro:
+            typeof ajustesGuardados.modoOscuro === 'boolean'
+              ? ajustesGuardados.modoOscuro
+              : AJUSTES_INICIALES.modoOscuro,
         });
 
         setSettingsLoaded(true);
