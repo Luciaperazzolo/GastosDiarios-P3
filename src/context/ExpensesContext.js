@@ -41,7 +41,13 @@ export function ExpensesProvider({ children }) {
   const [errorCarga, setErrorCarga] = useState(null);
   const [intentoCarga, setIntentoCarga] = useState(0);
 
-  // La aplicación estará lista cuando ambas cargas terminen.
+  // La hidratación consiste en recuperar los datos guardados
+  // al iniciar la aplicación.
+  //
+  // isLoaded indica que los ajustes de AsyncStorage y los
+  // gastos de Firestore terminaron de cargarse sin errores.
+  // Mientras sea false, la aplicación debe esperar a que
+  // los datos estén disponibles antes de mostrarlos.
   const isLoaded =
     settingsLoaded && firestoreLoaded && !errorCarga;
 
@@ -167,7 +173,9 @@ export function ExpensesProvider({ children }) {
   // 3. GUARDAR LOS AJUSTES EN ASYNCSTORAGE
   // --------------------------------------------------
   useEffect(() => {
-    // No guardamos hasta terminar la hidratación.
+    // Esperamos a que termine la hidratación de los ajustes
+    // para evitar sobrescribir los datos guardados en
+    // AsyncStorage con los valores iniciales de la aplicación.
     if (!settingsLoaded) return;
 
     async function guardarAjustes() {
