@@ -43,6 +43,23 @@ Por ejemplo, si el usuario tenía las notificaciones activadas y la aplicación 
 
 Para evitar este problema utilizamos settingsLoaded, que impide guardar los ajustes en AsyncStorage hasta que termine su carga. También utilizamos isLoaded para indicar que los ajustes y los gastos terminaron de cargarse sin errores.
 
+### Diferencia entre AsyncStorage y localStorage
+
+AsyncStorage es asíncrono, por lo que no podemos
+recuperar directamente los datos guardados al
+inicializar useState. Necesitamos utilizar useEffect
+y await para esperar el resultado y actualizar
+el estado una vez recuperados los datos.
+
+En cambio, localStorage es síncrono, por lo que
+podemos recuperar los datos inmediatamente al
+inicializar useState, sin necesidad de esperar
+una promesa.
+
+Por esta razón, en React Native necesitamos
+controlar cuándo finaliza la hidratación de los
+ajustes antes de permitir su guardado.
+
 ## 4. Conexión con Cloud Firestore
 
 Creamos un proyecto Firebase llamado ExpenseTracker y una colección denominada `expenses`.
