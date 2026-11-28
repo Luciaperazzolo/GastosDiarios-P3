@@ -176,6 +176,26 @@ En React Native, el gasto pendiente se perdió después de cerrar Expo Go.
 
 En cambio, en la PWA el gasto pendiente se conservó gracias a la persistencia configurada mediante IndexedDB y pudo sincronizarse posteriormente.
 
+### Explicación de la prueba 3
+
+En React Native, cuando registramos un gasto sin
+conexión a Internet, este queda almacenado
+temporalmente en la memoria. Al cerrar completamente
+Expo Go, esa memoria se pierde y el gasto no llega
+a sincronizarse con Firestore.
+
+En cambio, la PWA utiliza IndexedDB, que permite
+conservar los datos incluso después de cerrar
+el navegador.
+
+Por eso, al volver a abrir la PWA y recuperar
+la conexión a Internet, el gasto pendiente
+se sincroniza automáticamente con Firestore.
+
+La diferencia principal es que nuestra implementación
+de React Native utiliza una caché en memoria,
+mientras que la PWA utiliza una caché persistente.
+
 ## 8. Persistencia de ajustes
 
 En ambas aplicaciones implementamos las preferencias `notificaciones` y `modoOscuro`.
