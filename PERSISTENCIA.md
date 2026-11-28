@@ -35,6 +35,14 @@ En React Native, AsyncStorage recupera los ajustes de forma asíncrona. En la PW
 
 Los gastos se obtienen desde Firestore utilizando `onSnapshot()`, que escucha los cambios de la colección en tiempo real.
 
+### Error común al guardar antes de la hidratación
+
+Un error común es guardar los datos antes de que termine la hidratación. Esto puede provocar que los valores iniciales de la aplicación sobrescriban los datos que estaban guardados anteriormente.
+
+Por ejemplo, si el usuario tenía las notificaciones activadas y la aplicación inicia con el valor false, podría guardar ese valor antes de recuperar la configuración anterior.
+
+Para evitar este problema utilizamos settingsLoaded, que impide guardar los ajustes en AsyncStorage hasta que termine su carga. También utilizamos isLoaded para indicar que los ajustes y los gastos terminaron de cargarse sin errores.
+
 ## 4. Conexión con Cloud Firestore
 
 Creamos un proyecto Firebase llamado ExpenseTracker y una colección denominada `expenses`.
